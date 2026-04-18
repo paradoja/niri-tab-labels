@@ -52,6 +52,7 @@
           # always passed, hence the devShell packages win in PATH order.
           packages = [
             pkgs.nil
+            pkgs.pre-commit
             qmllint
             qmlls6
             qmlls
