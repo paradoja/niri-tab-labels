@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: qmlformat
+        name: qmlformat
+        description: Format QML files (matches Noctalia's qmlfmt.sh flags).
+        entry: qmlformat --inplace -w 2 -W 360 -S --semicolon-rule always
+        language: system
+        files: \.qml$
+      - id: qmllint
+        name: qmllint
+        description: Lint QML files. qs.* imports resolved via .qml-cache stubs.
+        entry: qmllint -I .qml-cache
+        language: system
+        files: \.qml$
