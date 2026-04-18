@@ -1,0 +1,20 @@
+{
+  "id": "niri-tab-labels",
+  "name": "Niri Tab Labels",
+  "version": "0.1.0",
+  "minNoctaliaVersion": "4.6.6",
+  "author": "Abby Henríquez Tejera",
+  "official": false,
+  "license": "MIT",
+  "description": "Per-column text labels for niri's tabbed-column-display mode.",
+  "tags": [
+    "Niri",
+    "Window management"
+  ],
+  "entryPoints": {
+    "main": "Main.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  }
+}
