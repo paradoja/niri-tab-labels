@@ -21,3 +21,7 @@ If the shell gets stuck, restart it:
 ```sh
 pkill -f 'qs -c noctalia-shell' && setsid qs -c noctalia-shell &
 ```
+
+### Warnings
+
+Keep `qmllint` warning-free — fix the issue or add a documented suppression to `.qmllint.ini`. Don't let them accumulate; once the noise floor is non-zero, real warnings disappear into it.
