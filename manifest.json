@@ -12,7 +12,8 @@
     "Window management"
   ],
   "entryPoints": {
-    "main": "Main.qml"
+    "main": "Main.qml",
+    "settings": "Settings.qml"
   },
   "dependencies": {
     "plugins": []
