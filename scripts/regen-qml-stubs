@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Generate a synthetic qmldir tree so qmllint / qmlls can resolve the `qs.*`
+# imports that Quickshell synthesizes at runtime by scanning the shell root.
+#
+# We walk the Noctalia shell tree and emit .qml-cache/qs/<Dir>/qmldir + symlinks
+# to the real .qml files. Only URIs actually imported by the plugin are
+# generated, to keep the cache tight.
+#
+# Yes I hate leaving warnings unaddressed.
+
+set -euo pipefail
+
+NOCTALIA_ROOT="${NOCTALIA_ROOT:-/etc/xdg/quickshell/noctalia-shell}"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CACHE_DIR="$PROJECT_ROOT/.qml-cache"
+
+if [[ ! -d "$NOCTALIA_ROOT" ]]; then
+  echo "regen-qml-stubs: $NOCTALIA_ROOT not found, skipping" >&2
+  exit 0
+fi
+
+mapfile -t uris < <(
+  grep -rhE '^[[:space:]]*import[[:space:]]+qs(\.[A-Za-z_][A-Za-z0-9_]*)+' \
+    --include='*.qml' "$PROJECT_ROOT" 2>/dev/null \
+  | sed -E 's/^[[:space:]]*import[[:space:]]+(qs(\.[A-Za-z_][A-Za-z0-9_]*)+).*/\1/' \
+  | sort -u
+)
+
+if [[ ${#uris[@]} -eq 0 ]]; then
+  echo "regen-qml-stubs: no qs.* imports in $PROJECT_ROOT, nothing to do" >&2
+  exit 0
+fi
+
+rm -rf "$CACHE_DIR"
+mkdir -p "$CACHE_DIR/qs"
+
+for uri in "${uris[@]}"; do
+  rel="${uri#qs.}"
+  rel_path="${rel//.//}"
+  src="$NOCTALIA_ROOT/$rel_path"
+
+  if [[ ! -d "$src" ]]; then
+    echo "regen-qml-stubs: $uri → $src not a directory, skipping" >&2
+    continue
+  fi
+
+  dst="$CACHE_DIR/qs/$rel_path"
+  mkdir -p "$dst"
+
+  {
+    echo "module $uri"
+    for qml in "$src"/*.qml; do
+      [[ -f "$qml" ]] || continue
+      name="$(basename "$qml" .qml)"
+      [[ "$name" =~ ^[A-Z] ]] || continue
+      if head -5 "$qml" | grep -q '^pragma Singleton'; then
+        echo "singleton $name 1.0 $name.qml"
+      else
+        echo "$name 1.0 $name.qml"
+      fi
+      ln -sf "$qml" "$dst/$name.qml"
+    done
+  } > "$dst/qmldir"
+done
+
+echo "regen-qml-stubs: wrote stubs for ${#uris[@]} module(s) to $CACHE_DIR" >&2
