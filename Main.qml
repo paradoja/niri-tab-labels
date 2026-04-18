@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
 
@@ -13,6 +14,42 @@ Item {
   readonly property var cfg: pluginApi?.pluginSettings || ({})
   readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
   readonly property string position: cfg.position ?? defaults.position ?? "top"
+
+  function handleEvent(line) {
+    if (!line) {
+      return;
+    }
+    try {
+      const ev = JSON.parse(line);
+      const kind = Object.keys(ev)[0];
+      console.log("niri-tab-labels event:", kind);
+    } catch (e) {
+      console.warn("niri-tab-labels: failed to parse line:", line, e);
+    }
+  }
+
+  Process {
+    id: niriEventStream
+
+    command: ["niri", "msg", "--json", "event-stream"]
+    running: true
+
+    stdout: SplitParser {
+      onRead: line => root.handleEvent(line)
+    }
+
+    onExited: code => {
+      console.warn("niri-tab-labels: event-stream exited code=" + code);
+      eventStreamRestart.start();
+    }
+  }
+
+  Timer {
+    id: eventStreamRestart
+    interval: 2000
+    repeat: false
+    onTriggered: niriEventStream.running = true
+  }
 
   Variants {
     model: Quickshell.screens
