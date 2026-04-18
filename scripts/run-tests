@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Run the plugin's QML test suite headlessly with qmltestrunner.
+#
+# Tests live in tests/tst_*.qml and use QtTest.TestCase. The offscreen Qt
+# platform keeps this runnable without a display, so it works in CI or over
+# SSH just as well as locally.
+
+set -euo pipefail
+
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export QT_QPA_PLATFORM=offscreen
+exec qmltestrunner -input tests
