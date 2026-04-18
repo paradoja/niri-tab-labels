@@ -16,5 +16,10 @@
   },
   "dependencies": {
     "plugins": []
+  },
+  "metadata": {
+    "defaultSettings": {
+      "position": "top"
+    }
   }
 }
